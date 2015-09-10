@@ -50,7 +50,7 @@ export default Ember.Mixin.create({
         
         if(changedAttr[key]){ 
             var groupName = meta.options && meta.options.group;
-            var stackable = meta.options && meta.options.sackable;
+            var stackable = meta.options && meta.options.stackable;
             var historyLastModel = this.get('history.stack.lastObject');
 
             var state = {
