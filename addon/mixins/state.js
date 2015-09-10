@@ -11,7 +11,7 @@ export default Ember.Mixin.create({
         this.set('isGroupClosed', false);
 
         this.eachAttribute((name, meta) => {
-            if(meta.options.stateless === true) return ;
+            if(meta.options.stateless === true && name === "isRemoved") return ;
             this.addObserver(name, () => {
                 this.propObserver(name, meta);
             });
