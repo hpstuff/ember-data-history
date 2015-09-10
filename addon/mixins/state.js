@@ -307,6 +307,7 @@ export default Ember.Mixin.create({
                 this.get(state.key).addObject(state.change);
             }
             else{
+                state.change.set('isRemoved', true);
                 this.get(state.key).removeObject(state.change);
             }
         }
