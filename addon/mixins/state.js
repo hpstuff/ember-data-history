@@ -51,9 +51,7 @@ export default Ember.Mixin.create({
             return;
         }
         
-        console.trace('prop change', this.get('id'), this.constructor.typeKey, key);
-
-        if(changedAttr[key]){ 
+        if((meta.options && meta.options.track) || changedAttr[key]){ 
             var groupName = meta.options && meta.options.group;
             var stackable = meta.options && meta.options.stackable;
             var historyLastModel = this.get('history.stack.lastObject');
@@ -154,8 +152,6 @@ export default Ember.Mixin.create({
             change: record,
             model: this
         });
-
-        console.trace('add record state', this.get('states'));
     },
 
     updateLastGroup: function(state, groupName){
@@ -218,7 +214,7 @@ export default Ember.Mixin.create({
             group.value[key] = state;
             this.saveState(group);
         }else {
-            state.value = changedAttr[key][0];
+            state.value = changedAttr[key] && changedAttr[key][0];
             if (state.change === state.value) {
                 return;
             }
@@ -282,8 +278,6 @@ export default Ember.Mixin.create({
         }
         this.get('history').push(this);
         this.get('states').pushObject(state);
-        console.error('States', this.get('states'));
-        console.error('History', this.get('history'));
     },
 
     restore: function(states){
