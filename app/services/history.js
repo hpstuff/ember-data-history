@@ -4,7 +4,9 @@ var {computed, A} = Ember;
 
 export default Ember.Service.extend({
     stack: A([]),
+    startRecordingIndex: -1,
     init: function(model){
+        this.set("startRecordingIndex", -1);
         this.clearAll();
         if(model) {
             model.track();
@@ -19,6 +21,17 @@ export default Ember.Service.extend({
     push: function(model){
         this.get('stack').pushObject(model);
     },
+    startRecording: function(){
+        this.set("startRecordingIndex", this.get('stack.length'));
+    },
+    stopRecording: function(){
+        if (this.get('startRecordignIndex') === -1) {
+            return;
+        }
+        var record = this.get('stack').splice(this.get('startRecordingIndex'), this.get('stack.length'));
+        this.set("startRecordingIndex", -1);
+        this.get('stack').pushObject(record);
+    },
     undoAll: function(){
         if (this.get('isEmpty')) {
             return;
@@ -26,9 +39,15 @@ export default Ember.Service.extend({
         while(this.undo()){
         }
     },
-    undo: function(record){
-        var model = this.get('stack').popObject();
+    undo: function(model){
+        var model = model || this.get('stack').popObject();
 
+        if (Ember.isArray(model)) {
+            model.forEach(m=>{
+                this.undo(m);
+            });
+            return true;
+        }
         if(model) {
             model.restore();
             return true;
