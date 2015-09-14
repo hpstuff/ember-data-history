@@ -24,19 +24,22 @@ export default Ember.Mixin.create({
                 this.propObserver(name, descriptor);
             });
             
-            if(descriptor.kind === 'hasMany' && Ember.isPresent(this.get(name).get('content'))){
-                this.get(name).get('content').forEach(r => {
+            if(descriptor.kind === 'hasMany' && Ember.isPresent(this.get(name))){
+                this.get(name).forEach(r => {
                     if(r.track) {
                         r.track();
                     }
                 });
             }
 
+            /*
+            //this will never execute since belongsTo is not trackable through
             if(descriptor.kind === 'belongsTo'){
                 if(this.get(name).track) {
                     this.get(name).track();
                 }
             }
+            */
         });
     },
 
@@ -48,6 +51,8 @@ export default Ember.Mixin.create({
             return;
         }
         
+        console.trace('prop change', this.get('id'), this.constructor.typeKey, key);
+
         if(changedAttr[key]){ 
             var groupName = meta.options && meta.options.group;
             var stackable = meta.options && meta.options.stackable;
@@ -131,7 +136,7 @@ export default Ember.Mixin.create({
         record.set('isRemoved', true);
         this.get(record.constructor.typeKey + 's').removeObject(record);
 
-        this.get('states').pushObject({
+        this.saveState({
             key: record.constructor.typeKey + 's',
             type: 'remove:hasMany',
             change: record,
@@ -282,7 +287,7 @@ export default Ember.Mixin.create({
         }else {
             this.restoreFromState(state);
         }
-        console.log('After Restore', states);
+        
         return true;
     },
 
