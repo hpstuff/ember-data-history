@@ -42,16 +42,17 @@ export default Ember.Service.extend(Ember.Evented, {
     undo: function(model){
         var model = model || this.get('stack').popObject();
 
-        this.trigger('restore');
-
         if (Ember.isArray(model)) {
-            model.forEach(m=>{
+            var m;
+            while(m = model.pop()){
                 this.undo(m);
-            });
+            }
+            this.trigger('restore');
             return true;
         }
         if(model) {
             model.restore();
+            this.trigger('restore');
             return true;
         }
         return false;
