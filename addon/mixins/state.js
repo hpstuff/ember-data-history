@@ -214,7 +214,7 @@ export default Ember.Mixin.create({
             group.value[key] = state;
             this.saveState(group);
         }else {
-            state.value = changedAttr[key] && changedAttr[key][0];
+            state.value = state.value = changedAttr[key] ? changedAttr[key][0] : state.change;
             if (state.change === state.value) {
                 return;
             }
