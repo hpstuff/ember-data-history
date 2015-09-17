@@ -2,7 +2,7 @@ import Ember from 'ember';
 
 var {computed, A} = Ember;
 
-export default Ember.Service.extend({
+export default Ember.Service.extend(Ember.Evented, {
     stack: A([]),
     startRecordingIndex: -1,
     init: function(model){
@@ -41,6 +41,8 @@ export default Ember.Service.extend({
     },
     undo: function(model){
         var model = model || this.get('stack').popObject();
+
+        this.trigger('restore');
 
         if (Ember.isArray(model)) {
             model.forEach(m=>{
