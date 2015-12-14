@@ -19,7 +19,6 @@ export default Ember.Mixin.create({
 
         this.eachRelationship((name, descriptor) => {
             if(descriptor.options.stateless === true) return ;
-
             this.addObserver(name, () => {
                 this.propObserver(name, descriptor);
             });
@@ -49,6 +48,11 @@ export default Ember.Mixin.create({
         
         if(Object.keys(changedAttr).length === 0 && !meta.kind) {
             return;
+        }
+        
+        if(this.get('undoingSteps') > 0){
+            this.set('undoingSteps', this.get('undoingSteps')-1);
+            return ; 
         }
         
         if((meta.options && meta.options.track) || changedAttr[key]){ 
@@ -82,7 +86,7 @@ export default Ember.Mixin.create({
                 }else {
                     //set value based on prev record
                     state.value = (lastState && lastState.change) || changedAttr[key][0],
-                    this.saveState(state);    
+                    this.saveState(state);
                 }
             }
         }
@@ -106,15 +110,27 @@ export default Ember.Mixin.create({
                 });
             }
         }
-
+        
         if(meta.kind === 'belongsTo'){
             if(relation){
-                this.get('history').push({
-                    key: key,
-                    type: 'belongsTo',
-                    change: relation,
-                    model: this
-                });
+                var lastState = this.getLastState(key);
+
+                if(!lastState || (lastState.key === key && (!lastState.value || lastState.change))){
+                    this.saveState({
+                        key: key,
+                        type: 'belongsTo',
+                        change: null,
+                        value: relation,
+                        model: this
+                    });
+
+                    return ;
+                }
+
+                if(lastState && lastState.key === key && lastState.value && lastState.value !== relation){
+                    lastState.change = relation; 
+                    this.updateLastState(lastState);
+                }
             }
         }
     },
@@ -165,7 +181,6 @@ export default Ember.Mixin.create({
             model: this,
             value: {}
         };
-
 
         //if we update the group and we have already recorded group in states use it as base value
         if (prevGroup && prevGroup.type === "group" && prevGroup.key === groupName) {
@@ -283,7 +298,7 @@ export default Ember.Mixin.create({
     restore: function(states){
         var states = states || this.get('states');
         var state = states.popObject();
-
+        
         if (!state) {
             return false;
         }
@@ -293,6 +308,10 @@ export default Ember.Mixin.create({
                 //do nothing
             }
         }else {
+            if(state.type === 'belongsTo'){
+                this.set('undoingSteps', 3);        //change: quick fix to support belongsTo relatonship revert
+            }
+            
             this.restoreFromState(state);
         }
         
